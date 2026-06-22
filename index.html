@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tabela de Preços – Junho 2026</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --red:    #c0392b;
+    --red-dk: #922b21;
+    --green:  #1a7a3c;
+    --green-dk: #145c2d;
+    --green-lt: #edfaf2;
+    --white:  #ffffff;
+    --gray1:  #1a1a1a;
+    --gray2:  #444;
+    --gray3:  #888;
+    --gray4:  #d0d0d0;
+    --radius: 10px;
+    /* Brasil */
+    --br-green:  #009c3b;
+    --br-green-dk: #007a2e;
+    --br-yellow: #ffdf00;
+    --br-blue:   #002776;
+    --br-lt:     #f0fff5;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #e5e5e5; color: var(--gray1); padding-bottom: 40px; }
+
+  /* HEADER */
+  .header { background: var(--red); color: var(--white); padding: 16px 16px 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  .header h1 { font-size: 16px; font-weight: 700; }
+  .header p  { font-size: 11px; opacity: .8; margin-top: 2px; }
+
+  /* SEARCH */
+  .search-wrap { background: var(--red-dk); padding: 8px 14px 12px; position: sticky; top: 54px; z-index: 99; }
+  .search-wrap input { width: 100%; padding: 9px 14px; border-radius: 20px; border: none; font-size: 14px; background: rgba(255,255,255,.18); color: var(--white); outline: none; }
+  .search-wrap input::placeholder { color: rgba(255,255,255,.55); }
+  .search-wrap input:focus { background: rgba(255,255,255,.28); }
+
+  /* PILLS */
+  .pills-wrap { background: var(--red-dk); padding: 0 12px 12px; position: sticky; top: 114px; z-index: 98; display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .pills-wrap::-webkit-scrollbar { display: none; }
+  .pill { white-space: nowrap; padding: 5px 13px; border-radius: 14px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid rgba(255,255,255,.4); color: rgba(255,255,255,.85); background: transparent; flex-shrink: 0; }
+  .pill.active { background: var(--white); color: var(--red); border-color: var(--white); }
+  .pill.priority-pill { border-color: #5dcc85; color: #5dcc85; }
+  .pill.priority-pill.active { background: var(--green); color: var(--white); border-color: var(--green); }
+
+  /* STATS */
+  .stats-bar { background: var(--white); padding: 7px 14px; font-size: 12px; color: var(--gray3); border-bottom: 1px solid var(--gray4); }
+  .stats-bar b { color: var(--gray1); }
+
+  /* PRIORITY BANNER */
+  .priority-banner {
+    margin: 12px 10px 0;
+    background: var(--green);
+    color: var(--white);
+    padding: 10px 14px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .priority-banner .badge {
+    background: #fff;
+    color: var(--green);
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 10px;
+    letter-spacing: .5px;
+    flex-shrink: 0;
+  }
+  .priority-banner span { font-size: 13px; font-weight: 700; }
+
+  /* SECTION */
+  .section { margin: 2px 10px 0; }
+  .section.first-of-group { margin-top: 0; }
+  .section.last-of-group { margin-bottom: 12px; }
+  .section-hdr { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; cursor: pointer; user-select: none; }
+  .section-hdr.normal { background: var(--red); color: var(--white); }
+  .section-hdr.priority { background: var(--green-dk); color: var(--white); }
+  .section-hdr h2 { font-size: 13px; font-weight: 700; letter-spacing: .3px; }
+  .section-hdr .chv { font-size: 15px; transition: transform .2s; }
+  .section-hdr.collapsed .chv { transform: rotate(-90deg); }
+  .section-body { overflow: hidden; background: var(--white); }
+
+  /* Bordas arredondadas por contexto */
+  .section.sec-priority-bdj .section-hdr { border-radius: 0; }
+  .section.sec-priority-bdj .section-body { border-radius: 0; }
+  .section.sec-priority-ind .section-hdr { border-radius: 0; }
+  .section.sec-priority-ind .section-body { border-radius: 0 0 var(--radius) var(--radius); }
+
+  /* demais seções */
+  .section.sec-normal .section-hdr { border-radius: var(--radius) var(--radius) 0 0; }
+  .section.sec-normal .section-body { border-radius: 0 0 var(--radius) var(--radius); }
+
+  /* GRIDS */
+  .col-hdr   { display: grid; grid-template-columns: 1fr 68px 68px 68px; background: #ececec; border-bottom: 1px solid var(--gray4); padding: 6px 10px; font-size: 10px; font-weight: 700; color: var(--gray3); text-transform: uppercase; letter-spacing: .3px; }
+  .col-hdr span:not(:first-child) { text-align: center; }
+  .card      { display: grid; grid-template-columns: 1fr 68px 68px 68px; align-items: center; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  .card:last-child { border-bottom: none; }
+  .card.hidden { display: none; }
+
+  .col-hdr-2 { display: grid; grid-template-columns: 1fr 80px 80px; background: #ececec; border-bottom: 1px solid var(--gray4); padding: 6px 10px; font-size: 10px; font-weight: 700; color: var(--gray3); text-transform: uppercase; letter-spacing: .3px; }
+  .col-hdr-2 span:not(:first-child) { text-align: center; }
+  .col-hdr-2.priority-hdr { background: var(--green-lt); color: var(--green); }
+  .card-2    { display: grid; grid-template-columns: 1fr 80px 80px; align-items: center; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; background: var(--white); }
+  .card-2:last-child { border-bottom: none; }
+  .card-2.hidden { display: none; }
+  .card-2.priority-card { background: var(--green-lt); }
+
+  .col-hdr-1 { display: grid; grid-template-columns: 1fr 90px; background: #ececec; border-bottom: 1px solid var(--gray4); padding: 6px 10px; font-size: 10px; font-weight: 700; color: var(--gray3); text-transform: uppercase; letter-spacing: .3px; }
+  .col-hdr-1 span:last-child { text-align: center; }
+  .col-hdr-1.priority-hdr { background: var(--green-lt); color: var(--green); }
+  .card-1    { display: grid; grid-template-columns: 1fr 90px; align-items: center; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; background: var(--white); }
+  .card-1:last-child { border-bottom: none; }
+  .card-1.hidden { display: none; }
+  .card-1.priority-card { background: var(--green-lt); }
+
+  .name { font-size: 13px; font-weight: 600; color: var(--gray1); line-height: 1.3; }
+  .name.priority-name { color: var(--green-dk); }
+  .p    { text-align: center; font-size: 12px; color: var(--gray2); font-variant-numeric: tabular-nums; }
+  .p.main { font-size: 13px; font-weight: 700; color: var(--red); }
+  .p.main.green { color: var(--green); }
+
+  .no-results { text-align: center; padding: 30px 16px; color: var(--gray3); font-size: 14px; display: none; }
+
+  /* COPA BRASIL */
+  .copa-banner {
+    margin: 12px 10px 0;
+    background: linear-gradient(135deg, var(--br-green) 0%, var(--br-green-dk) 100%);
+    color: var(--white);
+    padding: 11px 14px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .copa-badge {
+    background: var(--br-yellow);
+    color: var(--br-blue);
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 10px;
+    letter-spacing: .5px;
+    flex-shrink: 0;
+    border: 1.5px solid var(--br-blue);
+  }
+  .copa-banner span.copa-title { font-size: 13px; font-weight: 700; }
+  .section.sec-copa .section-hdr {
+    background: var(--br-blue);
+    color: var(--br-yellow);
+    border-radius: 0;
+  }
+  .section.sec-copa .section-body { border-radius: 0 0 var(--radius) var(--radius); }
+  .col-hdr-2.copa-hdr { background: var(--br-blue); color: var(--br-yellow); font-weight: 800; }
+  .card-2.copa-card { background: var(--br-lt); border-bottom: 1px solid #c8f0d8; }
+  .card-2.copa-card:last-child { border-bottom: none; }
+  .name.copa-name { color: var(--br-blue); font-weight: 700; }
+  .p.main.copa-price { color: var(--br-green-dk); }
+  .pill.copa-pill { border-color: var(--br-yellow); color: var(--br-yellow); }
+  .pill.copa-pill.active { background: var(--br-yellow); color: var(--br-blue); border-color: var(--br-yellow); }
+
+  /* separador entre blocos */
+  .block-gap { height: 14px; }
+
+  
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🐔 Tabela de Preços — Junho 2026</h1>
+  <p>Preços Varejo · Valores em R$/KG</p>
+</div>
+
+<div class="search-wrap">
+  <input type="search" id="search" placeholder="Buscar produto…" autocomplete="off">
+</div>
+
+<div class="pills-wrap">
+  <button class="pill active" data-f="all">Todos</button>
+  <button class="pill priority-pill" data-f="resfBdj">⭐ Resfr. Bandeja</button>
+  <button class="pill priority-pill" data-f="resfInd">⭐ Resfr. Individual</button>
+  <button class="pill" data-f="inteiros">Inteiros</button>
+  <button class="pill" data-f="perna">Perna</button>
+  <button class="pill" data-f="peito">Peito</button>
+  <button class="pill" data-f="asa">Asa</button>
+  <button class="pill" data-f="miudos">Miúdos</button>
+  <button class="pill" data-f="iqf">IQFs</button>
+  <button class="pill" data-f="mix">Mix Alim.</button>
+  <button class="pill" data-f="pescados">Pescados</button>
+  <button class="pill" data-f="vegetais">Vegetais</button>
+  <button class="pill copa-pill" data-f="copa">🇧🇷 Copa</button>
+</div>
+
+<div class="stats-bar" id="stats">—</div>
+<div class="no-results" id="noRes">Nenhum produto encontrado.</div>
+
+<!-- ══════════════════════════════════
+     ⭐ PRIORIDADE DE VENDA — TOPO
+══════════════════════════════════ -->
+<div class="priority-banner" id="priority-block">
+  <span class="badge">⭐ PRIORIDADE</span>
+  <span>Cortes Resfriados</span>
+</div>
+
+<div class="section sec-priority-bdj" data-sec="resfBdj">
+  <div class="section-hdr priority" onclick="toggleSec(this)"><h2>Resfriados — Bandejas</h2><span class="chv">▾</span></div>
+  <div class="section-body">
+    <div class="col-hdr-2 priority-hdr"><span>Produto</span><span>R$/KG</span><span>R$/Bdj</span></div>
+    <div class="card-2 priority-card" data-sec="resfBdj" data-name="coxa pilão resfriado bandeja"><span class="name priority-name">Coxa Pilão</span><span class="p main green">7,99</span><span class="p">5,91</span></div>
+    <div class="card-2 priority-card" data-sec="resfBdj" data-name="sobrecoxa resfriado bandeja"><span class="name priority-name">Sobrecoxa</span><span class="p main green">10,50</span><span class="p">9,14</span></div>
+    <div class="card-2 priority-card" data-sec="resfBdj" data-name="coxinha da asa resfriado bandeja"><span class="name priority-name">Coxinha da Asa</span><span class="p main green">10,50</span><span class="p">7,35</span></div>
+    <div class="card-2 priority-card" data-sec="resfBdj" data-name="meio da asa resfriado bandeja"><span class="name priority-name">Meio da Asa</span><span class="p main green">16,50</span><span class="p">11,55</span></div>
+    <div class="card-2 priority-card" data-sec="resfBdj" data-name="filé de peito resfriado bandeja"><span class="name priority-name">Filé de Peito</span><span class="p main green">14,99</span><span class="p">11,24</span></div>
+    <div class="card-2 priority-card" data-sec="resfBdj" data-name="sassami resfriado bandeja"><span class="name priority-name">Sassami</span><span class="p main green">14,99</span><span class="p">11,24</span></div>
+  </div>
+</div>
+
+<div class="section sec-priority-ind" data-sec="resfInd">
+  <div class="section-hdr priority" onclick="toggleSec(this)"><h2>Resfriados — Individuais (Pct)</h2><span class="chv">▾</span></div>
+  <div class="section-body">
+    <div class="col-hdr-1 priority-hdr"><span>Produto</span><span>R$/KG</span></div>
+    <div class="card-1 priority-card" data-sec="resfInd" data-name="frango inteiro resfriado individual"><span class="name priority-name">Frango Inteiro</span><span class="p main green">7,20</span></div>
+    <div class="card-1 priority-card" data-sec="resfInd" data-name="coxa e sobrecoxa resfriado individual"><span class="name priority-name">Coxa e Sobrecoxa</span><span class="p main green">7,00</span></div>
+    <div class="card-1 priority-card" data-sec="resfInd" data-name="coxinha da asa resfriado individual"><span class="name priority-name">Coxinha da Asa</span><span class="p main green">8,30</span></div>
+    <div class="card-1 priority-card" data-sec="resfInd" data-name="filé de peito resfriado individual"><span class="name priority-name">Filé de Peito</span><span class="p main green">12,20</span></div>
+    <div class="card-1 priority-card" data-sec="resfInd" data-name="coração resfriado individual"><span class="name priority-name">Coração</span><span class="p main green">29,00</span></div>
+    <div class="card-1 priority-card" data-sec="resfInd" data-name="moela resfriado individual"><span class="name priority-name">Moela</span><span class="p main green">11,80</span></div>
+  </div>
+</div>
+
+<div class="block-gap"></div>
+
+<!-- ═══ INTEIROS ═══ -->
+<div class="section sec-normal" data-sec="inteiros">
+  <div class="section-hdr normal" onclick="toggleSec(this)"><h2>INTEIROS — Congelados</h2><span class="chv">▾</span></div>
+  <div class="section-body">
+    <div class="col-hdr"><span>Produto</span><span>1 CX</span><span>10 CX+</span><span>20 CX+</span></div>
+    <div class="card" data-sec="inteiros" data-name="frango inteiro"><span class="name">Frango Inteiro</span><span class="p main">7,70</span><span class="p">7,60</span><span class="p">7,50</span></div>
+    <div class="card" data-sec="inteiros" data-name="frango sem miúdos carcaça"><span class="name">Frango Sem Miúdos Carcaça</span><span class="p main">10,70</span><span class="p">10,60</span><span class="p">10,50</span></div>
+    <div class="card" data-sec="inteiros" data-name="galo inteiro"><span class="name">Galo Inteiro</span><span class="p main">4,70</span><span class="p">4,60</span><span class="p">4,50</span></div>
+    <div class="card" data-sec="inteiros" data-name="galinha inteira"><span class="name">Galinha Inteira</span><span class="p main">6,20</span><span class="p">6,10</span><span class="p">6,00</span></div>
+  </div>
+</div>
+
+<!-- ═══ PERNA ═══ -->
+<div class="section sec-normal" data-sec="perna">
+  <div class="section-hdr normal" onclick="toggleSec(this)"><h2>PERNA — Congelados</h2><span class="chv">▾</span></div>
+  <div class="section-body">
+    <div class="col-hdr"><span>Produto</span><span>1 CX</span><span>10 CX+</span><span>20 CX+</span></div>
+    <div class="card" data-sec="perna" data-name="coxa pilão interfolhada"><span class="name">Coxa Pilão Interfolhada</span><span class="p main">6,70</span><span class="p">6,60</span><span class="p">6,50</span></div>
+    <div class="card" data-sec="perna" data-name="coxa pilão bandeja 1kg"><span class="name">Coxa Pilão Bandeja 1KG</span><span class="p main">8,20</span><span class="p">8,10</span><span class="p">8,00</span></div>
+    <div class="card" data-sec="perna" data-name="coxa e sobrecoxa c/ dorsal"><span class="name">Coxa e Sobrecoxa c/ Dorsal</span><span class="p main">6,50</span><span class="p">6,40</span><span class="p">6,30</span></div>
+    <div class="card" data-sec="perna" data-name="coxa e sobrecoxa"><span class="name">Coxa e Sobrecoxa</span><span class="p main">7,50</span><span class="p">7,40</span><span class="p">7,30</span></div>
+    <div class="card" data-sec="perna" data-name="coxa e sob passarinho 10kg"><span class="name">Coxa e Sob Passarinho 10KG</span><span class="p main">10,10</span><span class="p">10,00</span><span class="p">7,90</span></div>
+    <div class="card" data-sec="perna" data-name="filé de coxa c/ sobrecoxa"><span class="name">Filé de Coxa c/ Sobrecoxa</span><span class="p main">14,70</span><span class="p">14,60</span><span class="p">14,50</span></div>
+    <div class="card" data-sec="perna" data-name="filé de sobrecoxa s/ pele exp"><span class="name">Filé de Sobrecoxa s/ Pele Exp</span><span class="p main">14,40</span><span class="p">14,30</span><span class="p">14,20</span></div>
+    <div class="card" data-sec="perna" data-name="sobrecoxa interfolhada"><span class="name">Sobrecoxa Interf.</span><span class="p main">9,20</span><span class="p">9,10</span><span class="p">9,00</span></div>
+    <div class="card" data-sec="perna" data-name="sobrecoxa bandeja 1kg"><span class="name">Sobrecoxa Bandeja 1KG</span><span class="p main">10,00</span><span class="p">9,90</span><span class="p">9,80</span></div>
+  </div>
+</div>
+
+<!-- ═══ PEITO ═══ -->
+<div class="section sec-normal" data-sec="peito">
+  <div class="section-hdr normal" onclick="toggleSec(this)"><h2>PEITO — Congelados</h2><span class="chv">▾</span></div>
+  <div class="section-body">
+    <div class="col-hdr"><span>Produto</span><span>1 CX</span><span>10 CX+</span><span>20 CX+</span></div>
+    <div class="card" data-sec="peito" data-name="filé de peito"><span class="name">Filé de Peito</span><span class="p main">13,00</span><span class="p">12,90</span><span class="p">12,80</span></div>
+    <div class="card" data-sec="peito" data-name="filé de peito interfolhado"><span class="name">Filé de Peito Interfolhado</span><span class="p main">13,00</span><span class="p">12,90</span><span class="p">12,80</span></div>
+    <div class="card" data-sec="peito" data-name="filé de peito bandeja 1kg"><span class="name">Filé de Peito Bandeja 1KG</span><span class="p main">14,70</span><span class="p">14,60</span><span class="p">14,50</span></div>
+    <div class="card" data-sec="peito" data-name="recorte filé peito file coxa"><span class="name">Recorte Filé Peito + Filé Coxa</span><span class="p main">10,80</span><span class="p">10,70</span><span class="p">10,60</span></div>
+    <div class="card" data-sec="peito" data-name="file meio peito 1kg"><span class="name">File Meio Peito Indiv ou Pct 1KG</span><span class="p main">13,40</span><span class="p">13,30</span><span class="p">13,20</span></div>
+    <div class="card" data-sec="peito" data-name="filé grade b pct 10kg"><span class="name">Filé "Grade B" Pct 10KG</span><span class="p main">12,30</span><span class="p">12,20</span><span class="p">12,10</span></div>
+    <div class="card" data-sec="peito" data-name="filezinho sassami ind 1kg"><span class="name">Filezinho Sassami Ind ou 1KG</span><span class="p main">13,00</span><span class="p">12,90</span><span class="p">12,80</span></div>
+    <div class="card" data-sec="peito" data-name="sassami bandeja 1kg"><span class="name">Sassami Bandeja 1KG</span><span class="p main">14,70</span><span class="p">14,60</span><span class="p">14,50</span></div>
+    <div class="card" data-sec="peito" data-name="sassami grade b pct 10kg"><span class="name">Sassami "Grade B" Pct 10KG</span><span class="p main">12,40</span><span class="p">12,30</span><span class="p">12,20</span></div>
+    <div class="card" data-sec="peito" data-name="peito com osso"><span class="name">Peito com Osso</span><span class="p main">9,70</span><span class="p">9,60</span><span class="p">9,50</span></div>
+  </div>
+</div>
+
+<!-- ═══ ASA ═══ -->
+<div class="section sec-normal" data-sec="asa">
+  <div class="section-hdr normal" onclick="toggleSec(this)"><h2>ASA — Congelados</h2><span class="chv">▾</span></div>
+  <div class="section-body">
+    <div class="col-hdr"><span>Produto</span><span>1 CX</span><span>10 CX+</span><span>20 CX+</span></div>
+    <div class="card" data-sec="asa" data-name="asa inteira pct"><span class="name">Asa Inteira Pct</span><span class="p main">10,70</span><span class="p">10,60</span><span class="p">10,50</span></div>
+    <div class="card" data-sec="asa" data-name="coxinha da asa"><span class="name">Coxinha da Asa</span><span class="p main">9,70</span><span class="p">9,60</span><span class="p">9,50</span></div>
+    <div class="card" data-sec="asa" data-name="coxinha da asa bandeja 1kg"><span class="name">Coxinha da Asa Bandeja 1KG</span><span class="p main">10,20</span><span class="p">10,10</span><span class="p">10,00</span></div>
+    <div class="card" data-sec="asa" data-name="meio da asa interf"><span class="name">Meio da Asa Interf</span><span class="p main">16,70</span><span class="p">16,60</span><span class="p">16,50</span></div>
+    <div class="card" data-sec="asa" data-name="meio da asa pct 10kg"><span class="name">Meio da Asa Pct 10KG</span><span class="p main">16,10</span><span class="p">16,00</span><span class="p">15,90</span></div>
+    <div class="card" data-sec="asa" data-name="meio da asa pct"><span class="name">Meio da Asa Pct</span><span class="p main">18,70</span><span class="p">18,60</span><span class="p">18,50</span></div>
+  </div>
+</div>
+
+<!-- ═══ MIÚDOS ═══ -->
+<div class="section sec-normal" data-sec="miudos">
+  <div class="section-hdr normal" onclick="toggleSec(this)"><h2>MIÚDOS — Congelados</h2><span class="chv">▾</span></div>
+  <div class="section-body">
+    <div class="col-hdr"><span>Produto</span><span>1 CX</span><span>10 CX+</span><span>20 CX+</span></div>
+    <div class="card" data-sec="miudos" data-name="coração 600g bandeja"><span class="name">Coração 600g Bandeja (UN)</span><span class="p main">19,70</span><span class="p">19,60</span><span class="p">19,50</span></div>
+    <div class="card" data-sec="miudos" data-name="coração 1kg"><span class="name">Coração 1KG</span><span class="p main">30,20</span><span class="p">30,10</span><span class="p">30,00</span></div>
+    <div class="card" data-sec="miudos" data-name="fígado 1kg"><span class="name">Fígado 1KG</span><span class="p main">4,20</span><span class="p">4,10</span><span class="p">4,00</span></div>
+    <div class="card" data-sec="miudos" data-name="moela 1kg"><span class="name">Moela 1KG</span><span class="p main">12,20</span><span class="p">12,10</span><span class="p">12,00</span></div>
+    <div class="card" data-sec="miudos" data-name="pés"><span class="name">Pés</span><span class="p main">7,20</span><span class="p">7,10</span><span class="p">7,00</span></div>
+    <div class="card" data-sec="miudos" data-name="pés carijó"><span class="name">Pés Carijó</span><span class="p main">1,99</span><span class="p">1,99</span><span class="p">1,99</span></div>
+    <div class="card" data-sec="miudos" data-name="pescoço 1kg"><span class="name">Pescoço 1KG</span><span class="p main">4,40</span><span class="p">4,30</span><span class="p">4,20</span></div>
+    <div class="card" data-sec="miudos" data-name="sambiquira 1kg"><span class="name">Sambiquira 1KG</span><span class="p main">4,40</span><span class="p">4,30</span><span class="p">4,20</span></div>
+    <div class="card" data-sec="miudos" data-name="cms"><span class="name">CMS</span><span class="p main">2,89</span><span class="p">2,89</span><span class="p">2,89</span></div>
+  </div>
+</div>
+
+<!-- ═══ IQF's ═══ -->
+<div class="section sec-normal" data-sec="iqf">
+  <div class="section-hdr normal" onclick="toggleSec(this)"><h2>IQF's — Congelados</h2><span class="chv">▾</span></div>
+  <div class="section-body">
+    <div class="col-hdr"><span>Produto</span><span>1 CX</span><span>10 CX+</span><span>20 CX+</span></div>
+    <div class="card" data-sec="iqf" data-name="coxa pilão 1kg iqf"><span class="name">Coxa Pilão 1KG</span><span class="p main">8,70</span><span class="p">8,60</span><span class="p">8,50</span></div>
+    <div class="card" data-sec="iqf" data-name="coxa sob passarinho 1kg iqf"><span class="name">Coxa Sob Passarinho 1KG</span><span class="p main">8,20</span><span class="p">8,10</span><span class="p">8,00</span></div>
+    <div class="card" data-sec="iqf" data-name="sobrecoxa 1kg iqf"><span class="name">Sobrecoxa 1KG</span><span class="p main">10,70</span><span class="p">10,60</span><span class="p">10,50</span></div>
+    <div class="card" data-sec="iqf" data-name="sobrecoxa 6kg iqf"><span class="name">Sobrecoxa 6KG</span><span class="p main">10,00</span><span class="p">9,90</span><span class="p">9,80</span></div>
+    <div class="card" data-sec="iqf" data-name="coxinha da asa 1kg iqf"><span class="name">Coxinha da Asa 1KG</span><span class="p main">9,70</span><span class="p">9,60</span><span class="p">9,50</span></div>
+    <div class="card" data-sec="iqf" data-name="meio da asa 1kg iqf"><span class="name">Meio da Asa 1KG</span><span class="p main">21,20</span><span class="p">21,10</span><span class="p">21,00</span></div>
+    <div class="card" data-sec="iqf" data-name="filé de peito em bife 1kg iqf"><span class="name">Filé de Peito em Bife 1KG</span><span class="p main">15,70</span><span class="p">15,60</span><span class="p">15,50</span></div>
+    <div class="card" data-sec="iqf" data-name="filezinho sassami 1kg iqf"><span class="name">Filezinho Sassami 1KG</span><span class="p main">14,70</span><span class="p">14,60</span><span class="p">14,50</span></div>
+    <div class="card" data-sec="iqf" data-name="filé meio peito 1kg iqf"><span class="name">Filé Meio Peito 1KG</span><span class="p main">14,70</span><span class="p">14,60</span><span class="p">14,50</span></div>
+    <div class="card" data-sec="iqf" data-name="filé de sobrecoxa 1kg iqf"><span class="name">Filé de Sobrecoxa 1KG</span><span class="p main">16,10</span><span class="p">16,00</span><span class="p">15,90</span></div>
+  </div>
+</div>
+
+<!-- ═══ MIX ═══ -->
+<div class="section sec-normal" data-sec="mix">
+  <div class="section-hdr normal" onclick="toggleSec(this)"><h2>MIX ALIMENTOS PREPARADOS</h2><span class="chv">▾</span></div>
+  <div class="section-body">
+    <div class="col-hdr-2"><span>Produto</span><span>R$/KG</span><span>R$/UN</span></div>
+    <div class="card-2" data-sec="mix" data-name="pão de queijo canção 300gr"><span class="name">Pão de Queijo Canção 300gr</span><span class="p main">12,17</span><span class="p">3,65</span></div>
+    <div class="card-2" data-sec="mix" data-name="pão de queijo canção 800gr"><span class="name">Pão de Queijo Canção 800gr</span><span class="p main">10,99</span><span class="p">8,79</span></div>
+    <div class="card-2" data-sec="mix" data-name="filezinho empanado canção 700gr"><span class="name">Filezinho Empanado Canção 700gr</span><span class="p main">18,99</span><span class="p">13,29</span></div>
+    <div class="card-2" data-sec="mix" data-name="filezinho empanado canção 1kg"><span class="name">Filezinho Empanado Canção 1KG</span><span class="p main">17,49</span><span class="p">17,49</span></div>
+    <div class="card-2" data-sec="mix" data-name="chicken empanado canção 300gr"><span class="name">Chicken Empanado Canção 300gr</span><span class="p main">16,00</span><span class="p">4,80</span></div>
+    <div class="card-2" data-sec="mix" data-name="chicken empanado canção 1kg"><span class="name">Chicken Empanado Canção 1KG</span><span class="p main">12,99</span><span class="p">12,99</span></div>
+    <div class="card-2" data-sec="mix" data-name="futchicken empanado canção 300g"><span class="name">Futchicken Empanado Canção 300g</span><span class="p main">18,00</span><span class="p">5,40</span></div>
+    <div class="card-2" data-sec="mix" data-name="futchicken empanado canção 1kg"><span class="name">Futchicken Empanado Canção 1KG</span><span class="p main">13,99</span><span class="p">13,99</span></div>
+    <div class="card-2" data-sec="mix" data-name="lasanha bolonhesa 600g"><span class="name">Lasanha Bolonhesa 600G</span><span class="p main">15,50</span><span class="p">9,30</span></div>
+    <div class="card-2" data-sec="mix" data-name="lasanha quatro queijos 600g"><span class="name">Lasanha Quatro Queijos 600G</span><span class="p main">15,50</span><span class="p">9,30</span></div>
+    <div class="card-2" data-sec="mix" data-name="lasanha frango 600g"><span class="name">Lasanha Frango 600G</span><span class="p main">15,50</span><span class="p">9,30</span></div>
+  </div>
+</div>
+
+<!-- ═══ PESCADOS ═══ -->
+<div class="section sec-normal" data-sec="pescados">
+  <div class="section-hdr normal" onclick="toggleSec(this)"><h2>PESCADOS</h2><span class="chv">▾</span></div>
+  <div class="section-body">
+    <div class="col-hdr-2"><span>Produto</span><span>R$/KG</span><span>R$/UN</span></div>
+    <div class="card-2" data-sec="pescados" data-name="tilápia canção 400gr"><span class="name">Tilápia Canção 400gr</span><span class="p main">42,00</span><span class="p">16,80</span></div>
+    <div class="card-2" data-sec="pescados" data-name="tilápia canção 800gr"><span class="name">Tilápia Canção 800gr</span><span class="p main">41,50</span><span class="p">33,20</span></div>
+    <div class="card-2" data-sec="pescados" data-name="tilápia em pedaços 6kg"><span class="name">Tilápia em Pedaços 6KG</span><span class="p main">35,00</span><span class="p">—</span></div>
+    <div class="card-2" data-sec="pescados" data-name="iscas de tilápia empanada 400gr"><span class="name">Iscas de Tilápia Empanada 400gr</span><span class="p main">49,00</span><span class="p">19,60</span></div>
+    <div class="card-2" data-sec="pescados" data-name="filé de tilápia empanada 600gr"><span class="name">Filé de Tilápia Empanada 600gr</span><span class="p main">49,00</span><span class="p">29,40</span></div>
+    <div class="card-2" data-sec="pescados" data-name="bolinho de tilápia 300g"><span class="name">Bolinho de Tilápia 300G</span><span class="p main">25,00</span><span class="p">7,50</span></div>
+    <div class="card-2" data-sec="pescados" data-name="small fish 400g"><span class="name">Small Fish 400G</span><span class="p main">21,00</span><span class="p">8,40</span></div>
+    <div class="card-2" data-sec="pescados" data-name="small fish 1,5kg"><span class="name">Small Fish 1,5KG</span><span class="p main">21,00</span><span class="p">31,50</span></div>
+  </div>
+</div>
+
+<!-- ═══ VEGETAIS ═══ -->
+<div class="section sec-normal" data-sec="vegetais">
+  <div class="section-hdr normal" onclick="toggleSec(this)"><h2>VEGETAIS</h2><span class="chv">▾</span></div>
+  <div class="section-body">
+    <div class="col-hdr-2"><span>Produto</span><span>R$/KG</span><span>R$/UN</span></div>
+    <div class="card-2" data-sec="vegetais" data-name="batata canção 400gr"><span class="name">Batata Canção 400gr</span><span class="p main">11,49</span><span class="p">4,60</span></div>
+    <div class="card-2" data-sec="vegetais" data-name="batata canção 1,1kg"><span class="name">Batata Canção 1,1KG</span><span class="p main">9,90</span><span class="p">10,89</span></div>
+    <div class="card-2" data-sec="vegetais" data-name="batata canção 2kg"><span class="name">Batata Canção 2KG</span><span class="p main">8,99</span><span class="p">17,98</span></div>
+    <div class="card-2" data-sec="vegetais" data-name="batata noisete 400g"><span class="name">Batata Noisete 400G</span><span class="p main">12,00</span><span class="p">4,80</span></div>
+    <div class="card-2" data-sec="vegetais" data-name="aneís de cebola 1,1kg cx 11kg"><span class="name">Aneís de Cebola 1,1KG (cx 11kg)</span><span class="p main">18,50</span><span class="p">20,35</span></div>
+    <div class="card-2" data-sec="vegetais" data-name="aneís de cebola 1,1kg cx 6,6kg"><span class="name">Aneís de Cebola 1,1KG (cx 6,6kg)</span><span class="p main">18,50</span><span class="p">20,35</span></div>
+    <div class="card-2" data-sec="vegetais" data-name="mandioca 1kg"><span class="name">Mandioca 1KG</span><span class="p main">10,50</span><span class="p">10,50</span></div>
+    <div class="card-2" data-sec="vegetais" data-name="polenta 1kg"><span class="name">Polenta 1KG</span><span class="p main">6,99</span><span class="p">6,99</span></div>
+  </div>
+</div>
+
+<!-- ═══ COPA ═══ -->
+<div class="copa-banner" id="copa-block">
+  <span class="copa-badge">🇧🇷 LANÇAMENTO</span>
+  <span class="copa-title">Copa — Novidades</span>
+</div>
+<div class="section sec-copa" data-sec="copa">
+  <div class="section-hdr" onclick="toggleSec(this)"><h2>🆕 LANÇAMENTOS COPA</h2><span class="chv">▾</span></div>
+  <div class="section-body">
+    <div class="col-hdr-2 copa-hdr"><span>Produto</span><span>R$/KG</span><span>R$/UN</span></div>
+    <div class="card-2 copa-card" data-sec="copa" data-name="futburguer picles"><span class="name copa-name">Futburguer Picles</span><span class="p main copa-price">39,94</span><span class="p">5,99</span></div>
+    <div class="card-2 copa-card" data-sec="copa" data-name="futburguer requeijão bacon"><span class="name copa-name">Futburguer Requeijão/Bacon</span><span class="p main copa-price">39,94</span><span class="p">5,99</span></div>
+    <div class="card-2 copa-card" data-sec="copa" data-name="futburguer maionese grill"><span class="name copa-name">Futburguer Maionese Grill</span><span class="p main copa-price">39,94</span><span class="p">5,99</span></div>
+    <div class="card-2 copa-card" data-sec="copa" data-name="futchicken queijo"><span class="name copa-name">Futchicken Queijo</span><span class="p main copa-price">31,00</span><span class="p">9,30</span></div>
+    <div class="card-2 copa-card" data-sec="copa" data-name="futchicken tradicional"><span class="name copa-name">Futchicken Tradicional</span><span class="p main copa-price">23,30</span><span class="p">6,99</span></div>
+    <div class="card-2 copa-card" data-sec="copa" data-name="fut wings trad coxinha empanada"><span class="name copa-name">Fut Wings Trad (Coxinha Emp)</span><span class="p main copa-price">28,00</span><span class="p">19,60</span></div>
+    <div class="card-2 copa-card" data-sec="copa" data-name="fut wings apim coxinha empanada"><span class="name copa-name">Fut Wings Apim (Coxinha Emp)</span><span class="p main copa-price">28,00</span><span class="p">19,60</span></div>
+  </div>
+</div>
+
+<script>
+var activeFilter = 'all', searchQuery = '';
+
+document.querySelectorAll('.pill').forEach(function(pill) {
+  pill.addEventListener('click', function() {
+    document.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('active'); });
+    this.classList.add('active');
+    activeFilter = this.dataset.f;
+    applyFilters();
+  });
+});
+
+document.getElementById('search').addEventListener('input', function() {
+  searchQuery = this.value.trim().toLowerCase();
+  applyFilters();
+});
+
+function applyFilters() {
+  var visible = 0;
+  document.querySelectorAll('.card, .card-2, .card-1').forEach(function(el) {
+    var name = (el.dataset.name || '').toLowerCase();
+    var sec  = el.dataset.sec || '';
+    var show = (activeFilter === 'all' || sec === activeFilter) && (!searchQuery || name.includes(searchQuery));
+    el.classList.toggle('hidden', !show);
+    if (show) visible++;
+  });
+
+  // seções normais
+  document.querySelectorAll('.section').forEach(function(sec) {
+    var secId = sec.dataset.sec;
+    var matchFilter = activeFilter === 'all' || secId === activeFilter;
+    var hasVisible = sec.querySelectorAll('.card:not(.hidden), .card-2:not(.hidden), .card-1:not(.hidden)').length > 0;
+    sec.style.display = (matchFilter && hasVisible) ? '' : 'none';
+  });
+
+  // banner de prioridade
+  var prioVisible = (activeFilter === 'all' || activeFilter === 'resfBdj' || activeFilter === 'resfInd');
+  var prioHasItems = document.querySelector('.priority-card:not(.hidden)');
+  document.getElementById('priority-block').style.display = (prioVisible && prioHasItems) ? '' : 'none';
+
+  // banner Copa
+  var copaVisible = (activeFilter === 'all' || activeFilter === 'copa');
+  var copaHasItems = document.querySelector('.copa-card:not(.hidden)');
+  var copaBlock = document.getElementById('copa-block');
+  if (copaBlock) copaBlock.style.display = (copaVisible && copaHasItems) ? '' : 'none';
+
+  document.getElementById('stats').innerHTML = 'Exibindo <b>' + visible + '</b> produto' + (visible !== 1 ? 's' : '');
+  document.getElementById('noRes').style.display = visible === 0 ? 'block' : 'none';
+}
+
+function toggleSec(hdr) {
+  hdr.classList.toggle('collapsed');
+  hdr.nextElementSibling.style.display = hdr.classList.contains('collapsed') ? 'none' : '';
+}
+
+applyFilters();
+</script>
+</body>
+</html>
